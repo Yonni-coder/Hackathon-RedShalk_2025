@@ -59,7 +59,6 @@ export default function Page() {
                 }),
             })
             const result = await response.json()
-            useAuthStore.getState().login(result.user)
             window.location.href = "/"
 
             if (!response.ok) {

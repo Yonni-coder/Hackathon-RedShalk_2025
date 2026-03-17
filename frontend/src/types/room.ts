@@ -23,6 +23,9 @@ export interface Room {
   company_name: string;
   tarifs: RoomTarif;
   photos: string[];
+  latitude?: number;
+  longitude?: number;
+  _distance?: number;
 }
 
 export interface ReservationData {

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion"
 import Logo from "../design/logo"
 import ActiveLink from "./active-link"
-import { Bell, Building2, Calendar, ChevronDown, Eye, Gift, Home, Menu, ShoppingCart, User, X } from "lucide-react"
+import { Bell, Building2, Calendar, ChevronDown, Eye, Gift, Home, Loader2, LogOut, Menu, ShoppingCart, User, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { Button, buttonVariants } from "../ui/button"
 import { useEffect, useState } from "react"
@@ -16,13 +16,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { usePathname } from "next/navigation"
 import useRoomsStore from "@/stores/roomsStore"
 import { useCartStore } from "@/stores/cartStore"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet"
  
 export default function Navbar () {
     const [isOpen, setIsOpen] = useState(false)
-    const { user, isAuthenticated } = useAuthStore()
+    const { user, logout, isAuthenticated } = useAuthStore()
     const { items } = useCartStore()
+    const [loading, setLoading] = useState(false)
     const pathname = usePathname()
     const toggleMenu = () => setIsOpen(!isOpen)
+
+    const handleLogout = async () => {
+        try {
+            setLoading(true)
+            await logout()
+            window.location.href = "/"
+        } finally {
+            setLoading(false)
+        }
+    }
     
     return (
         <motion.nav
@@ -152,15 +164,45 @@ export default function Navbar () {
                         </motion.div>
                     {isAuthenticated && user ? (
                         <>
-                            <Avatar className="w-10 h-10 cursor-pointer">
-                                <AvatarImage
-                                    src="/assets/images/30.png"
-                                    alt="usere"
-                                />
-                                <AvatarFallback className="bg-secondary text-md font-bold">
-                                    {user.fullname.substr()}
-                                </AvatarFallback>
-                            </Avatar>
+                            
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Avatar className="w-10 h-10 cursor-pointer">
+                                        <AvatarImage
+                                            src="/assets/images/30.png"
+                                            alt="usere"
+                                        />
+                                        <AvatarFallback className="bg-secondary text-md font-bold">
+                                            {user.fullname.substr()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </SheetTrigger>
+                                <SheetContent
+                                    side="right"
+                                    className="w-64 border-l-2 border-neutral-400 dark:border-neutral-800 p-0"
+                                >
+                                    <SheetHeader className="p-4 border-b">
+                                        <SheetTitle>
+                                            @{user.fullname.toLowerCase()}
+                                        </SheetTitle>
+                                    </SheetHeader>
+
+                                    <nav className="flex flex-col p-4">
+                                        <button
+                                            onClick={handleLogout}
+                                            disabled={loading}
+                                            className="w-full p-2 rounded-lg flex items-center gap-2 hover:bg-secondary transition-all outline-none"
+                                        >
+                                            {loading ? (
+                                                <Loader2 className="w-4 h-4 animate-pulse" />
+                                            ) : (
+                                                <LogOut className="w-4 h-4" />
+                                            )}
+                                            {loading ? "Déconnexion..." : "Déconnexion"}
+                                        </button>
+                                    </nav>
+                                </SheetContent>
+                            </Sheet>
                         </>
                     ) : (
                         <motion.div 

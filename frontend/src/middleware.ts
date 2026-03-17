@@ -2,14 +2,14 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 const publicRoutes = ["/"]
-const authOnlyRoutes = ["/manage"]
+const authOnlyRoutes = ["/manage", "/ressources", "/reservations"]
 const guestOnlyRoutes = ["/sign-in", "/sign-up"]
 
 const isRouteOrSubpath = (path: string, route: string) =>
   path === route || path.startsWith(route + "/")
 
 export async function middleware(req: NextRequest) {
-  const token = req.cookies.get("accessToken")?.value
+  const token = req.cookies.get("token")?.value
   const path = req.nextUrl.pathname
   const url = req.nextUrl.clone()
 

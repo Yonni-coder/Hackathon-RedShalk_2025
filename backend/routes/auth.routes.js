@@ -9,7 +9,6 @@ router.post("/signup", checkSignup, signup);
 router.post("/login", login);
 router.get("/me", authenticate, async (req, res) => {
   try {
-    // Utilisez db directement au lieu de req.db
     const [rows] = await db.query(
       "SELECT id, fullname, email FROM users WHERE id = ?",
       [req.user.id]
@@ -25,6 +24,6 @@ router.get("/me", authenticate, async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
-router.post("/logout", logout); // Ajouter la route de déconnexion
+router.post("/logout", logout);
 
 module.exports = router;

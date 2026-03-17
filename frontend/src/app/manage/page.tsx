@@ -160,8 +160,8 @@ export default function CoworkingDashboard() {
         { id: "dashboard", label: "Tableau de Bord", icon: Home },
         { id: "available", label: "Salle Disponible", icon: Building },
         { id: "users", label: "Employé", icon: User },
-        { id: "ressources", label: "Ressources", icon: Library },
-        { id: "create_ressources", label: "Créer un Type && Ressource", icon: FolderPlus },
+        { id: "ressources", label: "Espace", icon: Library },
+        { id: "create_ressources", label: "Créer un Espace", icon: FolderPlus },
     ]
 
     return (

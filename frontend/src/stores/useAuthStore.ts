@@ -1,17 +1,46 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
 
-export const useAuthStore = create()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
+export const useAuthStore = create((set, get) => ({
+  user: null,
+  authenticated: false,
 
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
-    }),
-    {
-      name: "auth-storage", // 🔑 clé utilisée dans localStorage
+  setUser: (user) => {
+    set({ user, authenticated: !!user })
+  },
+
+  isAuthenticated: async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
+        method: "GET",
+        credentials: "include",
+      })
+
+      if (!res.ok) {
+        set({ user: null, authenticated: false })
+        return false
+      }
+
+      const data = await res.json()
+      set({ user: data, authenticated: !!data })
+      return !!data.user
+    } catch (err) {
+      console.error("isAuthenticated error:", err)
+      set({ user: null, authenticated: false })
+      return false
     }
-  )
-)
+  },
+
+  logout: async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      })
+    } catch (err) {
+      console.error("Logout error:", err)
+    } finally {
+      set({ user: null, authenticated: false })
+    }
+  },
+
+}))

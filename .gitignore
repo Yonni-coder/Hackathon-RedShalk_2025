@@ -5,7 +5,7 @@ uploads/
 # Environment files
 .env
 .env.*.local
-
+images
 # Logs
 logs/
 *.log

@@ -18,13 +18,13 @@ export default function Hero () {
                                 <Link
                                     href="/"
                                     className="rounded-lg mx-auto flex w-fit items-center gap-2 border p-1 pr-3 lg:ml-0">
-                                    <span className="bg-muted rounded-[calc(var(--radius)-0.25rem)] px-2 py-1 text-xs">a'Rafitra</span>
+                                    <span className="bg-muted rounded-[calc(var(--radius)-0.25rem)] px-2 py-1 text-xs">MeetSpace</span>
                                     <span className="text-sm">Explorez nos espaces disponibles</span>
                                     <span className="bg-(--color-border) block h-4 w-px"></span>
                                     <ArrowRight className="size-4" />
                                 </Link>
                                 <div className="mt-8">
-                                    <TextGenerateEffect duration={2} filter={false} words="a’Rafitra, votre espace quand vous en avez besoin." />
+                                    <TextGenerateEffect duration={2} filter={false} words="MeetSpace, votre espace quand vous en avez besoin." />
                                 </div>
                                 <motion.p
                                     initial={{ opacity: 0, y: -50 }}
@@ -35,7 +35,7 @@ export default function Hero () {
                                     transition={{ type: "spring" }}
                                     className="mt-8"
                                 >
-                                    Avec a’Rafitra, trouvez facilement l’espace qui vous correspond : une salle pour collaborer, un bureau pour travailler en toute tranquillité, ou un espace dédié pour vos événements.
+                                    Avec MeetSpace, trouvez facilement l’espace qui vous correspond : une salle pour collaborer, un bureau pour travailler en toute tranquillité, ou un espace dédié pour vos événements.
                                 </motion.p>
                                 <div>
                                     <div className="my-8">

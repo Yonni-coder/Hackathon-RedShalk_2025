@@ -66,10 +66,10 @@ export default function TypesForm () {
         <Card className="flex-1">
             <CardHeader>
                 <CardTitle className="text-2xl font-bold">
-                    Types de Ressources
+                    Types de l'espace
                 </CardTitle>
                 <CardDescription>
-                    Définissez les catégories de vos espaces (salles de réunion, bureaux individuels, espaces collaboratifs, etc.) pour mieux organiser vos ressources.
+                    Définissez les catégories de vos espaces (Espace Business, Coin, Salle de Conférence, etc.) pour mieux organiser vos ressources.
                 </CardDescription>
             </CardHeader>
             <CardContent>

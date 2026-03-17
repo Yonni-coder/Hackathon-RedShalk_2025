@@ -25,7 +25,7 @@ export default function Features ({
                     viewport={{ once: true }}
                 >
                     <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-                        Pourquoi choisir a'Rafitra ?
+                        Pourquoi choisir MeetSpace ?
                     </h2>
                 </motion.div>
 

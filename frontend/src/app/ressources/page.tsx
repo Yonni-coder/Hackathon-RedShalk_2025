@@ -4,15 +4,18 @@ import { ReservationDialog } from "@/components/design/ressources/ReservationDia
 import { RoomCard } from "@/components/design/ressources/RoomCard";
 import { RoomSkeletonGrid } from "@/components/design/ressources/RoomSkeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TextGenerateEffect } from "@/components/ui/text-generate-effect";
 import { useInfiniteRooms } from "@/hooks/useInfiniteRooms";
+import { useUserLocation } from "@/hooks/useUserLocator";
+import { haversineDistance } from "@/lib/locator";
 import { useCartStore } from "@/stores/cartStore";
 import useRoomsStore from "@/stores/roomsStore";
 import { ReservationData, Room } from "@/types/room";
 import { motion } from "framer-motion";
-import { Building2, Filter, MapPin, Search } from "lucide-react";
+import { Building2, Filter, Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
@@ -34,6 +37,10 @@ export default function Page() {
   const [reserveLoading, setReserveLoading] = useState(false)
   const { setRooms } = useRoomsStore()
   const { addItem } = useCartStore()
+  const [useProximity, setUseProximity] = useState(false)
+  const [maxDistanceKm, setMaxDistanceKm] = useState<number | null>(null); // optionnel (ex: 5 km)
+
+  const { position, loading: locLoading, error: locError, requestLocation } = useUserLocation()
   
   const sampleRooms = useRoomsStore((s) => s.rooms)
 
@@ -52,6 +59,29 @@ export default function Page() {
     return filtered;
   }, [searchTerm, sampleRooms]);
 
+  const roomsSortedByProximity = useMemo(() => {
+    if (!useProximity || !position) return filteredRooms;
+
+    const enriched = filteredRooms
+      .map((r) => {
+        if (typeof r.latitude !== "number" || typeof r.longitude !== "number") {
+          return { ...r, _distance: Infinity }; // absent : pousse en fin
+        }
+        const d = haversineDistance(position.lat, position.lng, r.latitude, r.longitude);
+        return { ...r, _distance: d };
+      })
+      .filter((r) => {
+        if (r._distance === Infinity) return false; // option : cacher les salles sans coords
+        if (maxDistanceKm == null) return true;
+        return (r._distance ?? Infinity) <= maxDistanceKm;
+      })
+      .sort((a, b) => (a._distance ?? Infinity) - (b._distance ?? Infinity));
+
+    return enriched;
+  }, [filteredRooms, useProximity, position, maxDistanceKm])
+
+  const roomsToDisplay = useMemo(() => (useProximity ? roomsSortedByProximity : filteredRooms), [useProximity, roomsSortedByProximity, filteredRooms])
+
   // Get unique room types for filter
   const roomTypes = useMemo(() => {
     const types = Array.from(new Set(sampleRooms.map(room => room.type_name)));
@@ -59,7 +89,7 @@ export default function Page() {
   }, []);
 
   const { rooms, loading, hasMore, loadMore } = useInfiniteRooms({
-    initialRooms: filteredRooms,
+    initialRooms: roomsToDisplay,
     filterType: selectedTypeFilter,
   });
 
@@ -141,55 +171,117 @@ export default function Page() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8 space-y-4"
         >
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Rechercher une salle..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/70 backdrop-blur-sm focus:border-blue-300"
-              />
-            </div>
+  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+    {/* Search */}
+    <div className="relative flex-1 max-w-xl">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+      <Input
+        placeholder="Rechercher une salle, lieu ou description..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="pl-10 pr-10 bg-white/80 backdrop-blur-sm border-slate-200"
+      />
+      {/* Clear button */}
+      {searchTerm && (
+        <button
+          onClick={() => setSearchTerm("")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 hover:bg-slate-100"
+          aria-label="Effacer la recherche"
+        >
+          ✕
+        </button>
+      )}
+    </div>
 
-            {/* Type Filter */}
-            <div className="flex items-center gap-4">
-              <Filter className="w-5 h-5 text-gray-500 dark:text-white" />
-              <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
-                <SelectTrigger className="w-48 bg-white/70 backdrop-blur-sm">
-                  <SelectValue placeholder="Type de salle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  {roomTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    {/* Controls group */}
+    <div className="flex items-center gap-3">
+      <Button
+        variant={useProximity ? "default" : "outline"}
+        onClick={() => {
+          if (!position) requestLocation();
+          setUseProximity((s) => !s);
+        }}
+        className="flex items-center gap-2"
+      >
+        <MapPin className="w-4 h-4" />
+        <span className="text-sm">
+          {useProximity ? "Trier par proximité" : "Près de moi"}
+        </span>
+      </Button>
 
-          {/* Stats */}
-          <div className="flex flex-wrap gap-4 items-center text-sm text-gray-600 dark:text-white">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              <span>{rooms.length} salles disponibles</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>3 bâtiments</span>
-            </div>
-            {selectedTypeFilter !== 'all' && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Filter className="w-3 h-3" />
-                {selectedTypeFilter}
-              </Badge>
-            )}
-          </div>
-        </motion.div>
+      {/* Max distance */}
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          placeholder="Max km"
+          value={maxDistanceKm ?? ""}
+          onChange={(e) =>
+            setMaxDistanceKm(e.target.value ? Number(e.target.value) : null)
+          }
+          className="w-28 text-sm"
+        />
+      </div>
+
+      {/* Type filter */}
+      <div className="flex items-center gap-2">
+        <Filter className="w-5 h-5 text-gray-500" />
+        <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
+          <SelectTrigger className="w-44 bg-white/80 backdrop-blur-sm border-slate-200 text-sm">
+            <SelectValue placeholder="Type de salle" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les types</SelectItem>
+            {roomTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  </div>
+
+  {/* Location status & errors */}
+  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+    <div className="flex items-center gap-3 text-sm text-slate-600">
+      {locLoading && (
+        <div className="inline-flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Obtention de la position…</span>
+        </div>
+      )}
+      {locError && <span className="text-red-500">Erreur géoloc : {locError}</span>}
+      {position && useProximity && (
+        <span className="inline-flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-indigo-500" />
+          Vous êtes à {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
+        </span>
+      )}
+    </div>
+
+    {/* Stats pills */}
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-secondary border rounded-md px-3 py-1 text-sm">
+        <Building2 className="w-4 h-4 text-slate-600" />
+        <span>{rooms.length} salles</span>
+      </div>
+
+      <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-secondary border rounded-md px-3 py-1 text-sm">
+        <MapPin className="w-4 h-4 text-slate-600" />
+        <span>3 bâtiments</span>
+      </div>
+
+      {selectedTypeFilter !== "all" && (
+        <Badge variant="secondary" className="flex items-center gap-2 px-2 py-1 text-sm">
+          <Filter className="w-3 h-3" />
+          {selectedTypeFilter}
+        </Badge>
+      )}
+    </div>
+  </div>
+</motion.div>
+
 
         {/* Rooms Grid */}
         <motion.div

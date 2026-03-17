@@ -52,7 +52,7 @@ export function RoomCard({ room, onReserve }: RoomCardProps) {
         <div className="relative">
       {/* Image affichée */}
       <img
-        src={`/assets/images/all/${room.photos?.[currentIndex]?.photo_url}` || "/placeholder.svg"}
+        src={`/images/${room.photos?.[currentIndex]?.photo_url}` || "/assets/images/.svg"}
         alt={room.name}
         className="w-full h-48 object-cover rounded-lg"
       />

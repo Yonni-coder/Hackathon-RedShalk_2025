@@ -19,7 +19,7 @@ export default function CTASection ({ scaleOnHover }: { scaleOnHover: MotionProp
                         Prêt à transformer votre façon de travailler ?
                     </h2>
                     <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-                        Rejoignez des milliers d'utilisateurs qui font confiance à a'Rafitra pour leurs espaces de travail
+                        Rejoignez des milliers d'utilisateurs qui font confiance à MeetSpace pour leurs espaces de travail
                     </p>
                     <motion.div {...scaleOnHover}>
                         <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
